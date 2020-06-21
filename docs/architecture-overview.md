@@ -3,6 +3,7 @@
 This document outlines the architecture of the CWA mobile client. It does not necessarily reflect the current implementation status in this repository and will be enriched in the future, as development is ongoing.
 
 ## Overview
+
 The Corona-Warn-App Client ("CWA-Client") is a native mobile phone application developed for the mobile platforms iOS and Android. The CWA-Client is embedded into the common Corona-Warn-App ecoystem. (For an end-to-end overview please refer to the [Solution Architecture Overview](https://github.com/corona-warn-app/cwa-documentation/blob/master/solution_architecture.md))
 
 The key functionality of the CWA-Client is divided into the following pillars:
@@ -17,23 +18,29 @@ The key functionality of the CWA-Client is divided into the following pillars:
 ![Overview Diagram](./images/Architecture_Overview_v1.svg)
 
 ### Exposure Tracing Management
+
 The Exposure Tracing Management component uses the native implementation of the Exposure Notification Framework provided by Google and Apple to activate, deactivate or check the status of the tracing functionality. If exposure tracing is activated by the user the activation-status of required technical services (e.g. Bluetooth) will be verified as well. To calculate the Exposure Risk Level of the user the active tracing time is taken into account. As a result, initial tracing activation timestamp as well as the time where tracing was deactivated during the last 14 days is persisted.
 
 ### Exposure Risk Level Calculation
+
 The Exposure Risk Level Calculation is implemented using the native implementations of Google and Apple. To consume the APIs with the necessary data the client loads the available DiagnosisKeys for the calculation time range of 14 days from the [CWA-Distribution service](https://github.com/corona-warn-app/cwa-server/blob/master/docs/ARCHITECTURE.md). To reduce the network footprint a local DiagnosisKey cache is used. With the diagnosisKeys the client passes the freshly downloaded exposure risk calculation configuration to the API of the mobile operation system. Finally the exposure risk level of the user is selected using the matched exposure risk level range for the maximum exposure risk occurring in the last 14 days. The calculated exposure risk level and the exposure risk summary (maximumRiskScore, daysSinceLastExposure and matchedKeyCount) together with the calculation timestamp are stored on the client to allow the user access to his latest calculation results when offline. The exposure risk level calculation is implemented as background online-only functionality ensuring that the latest diagnosisKeys as well as the latest configuration are used. If a risk level change happens during background processing a local notification will be raised. For configuration and error scenarios during offline hours an error risk level assignment is implemented.
 
 ### Test Result Access
+
 The Test Result Access component implements the HTTP choreography provided by the [CWA-Verification service](https://github.com/corona-warn-app/cwa-verification-server/blob/master/docs/architecture-overview.md). Using the testGUID (scanned by a QR-Code) or the teleTAN (manually entered) the client receives a registration token identifying a long term session. In the testGUID variant the client accesses the test result as online-only functionality. This ensures that the latest test data is shown and only the minimum of needed data is stored on the client. To minimize the data footprint shared with other push technology server side infrastructures a periodic polling mechanism between client and CWA-Verification service will check in the background if a test result is available and informs the user via a local notification. In the teleTAN scenario no test result is retrieved using the registrationToken since the user is already known to be COVID-19 positive.
 
 ### Diagnosis Key Submission
+
 Once a user is tested positive the Diagnosis Key Submission component can be used. The software component uses the persisted registrationToken to access a Submission-TAN from the [CWA-Verification service](https://github.com/corona-warn-app/cwa-verification-server/blob/master/docs/architecture-overview.md). After accessing the Submission-TAN the available TemporaryExposureKeys are retrieved as DiagnosisKey by the corresponding mobile OS APIs. Every TemporaryExposureKey is enriched with the TransmissionRiskDefaultParameter fitting to the key creation day. The latest TransmissionRiskDefaultParameters are accessed by the [CWA-Distribution service](https://github.com/corona-warn-app/cwa-server/blob/master/docs/ARCHITECTURE.md). To allow the introduction of subsequent TemporaryExposureKey submissions with delta semantics to the previous submission in the future the timestamp of the last successful diagnosisKey submission is persisted.
 
 ## Libraries
 
 ### Google Exposure Notification
+
 [Link to Google's page](https://www.google.com/covid19/exposurenotifications/)
 
 ### ZXing Embedded
+
 Barcode scanning library by https://journeyapps.com/ based on ZXing decoder.
 
 This library is used for embedded QR code scanning process during TAN submission to help end users of the application quickly submit their SARS-CoV-2 results without installing additional scanning software.
@@ -43,6 +50,7 @@ Licensing: [Apache License 2.0](https://github.com/journeyapps/zxing-android-emb
 [GitHub](https://github.com/journeyapps/zxing-android-embedded)
 
 ### Joda Time
+
 Easy to use standard date and time classes. Used for date calculations, calendar and timezone handling.
 
 Licensing: [Apache License 2.0](https://github.com/JodaOrg/joda-time/blob/master/LICENSE.txt)
@@ -51,11 +59,13 @@ Licensing: [Apache License 2.0](https://github.com/JodaOrg/joda-time/blob/master
 
 
 ### Room
+
 Room is a persistence library that provides an abstraction layer over SQLite. In contrary against the EncryptedSharedPreferences Room is used for storing more complex data.
 
 [Documentation](https://developer.android.com/topic/libraries/architecture/room)
 
 ### SQLCipher
+
 Used to encrypt the Room database.
 
 Licensing: [BSD-3](https://github.com/sqlcipher/android-database-sqlcipher/blob/master/SQLCIPHER_LICENSE)
